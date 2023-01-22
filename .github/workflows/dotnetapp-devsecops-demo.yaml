@@ -8,14 +8,15 @@ on:
 
 jobs:
   build-dotnet-application:
-    name: Build .NET Core
+    name: Build .NET Application
     runs-on: ubuntu-latest
     steps:
-      -name: Setup .NET Core
-        uses:  actions/setup-dotnet@v3
+      -uses: actions/checkout@v3
+      -name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with: 
-          dotnet-version: '6.0.405'
-          distribution: 'temurin'
+          dotnet-version: 6.0.405
+          
           
       - name: Verify .NET Version
         run: .NET -version
