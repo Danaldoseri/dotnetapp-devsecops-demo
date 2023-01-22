@@ -18,26 +18,26 @@ jobs:
           dotnet-version: 6.0.405
           
 
-      - name: Verify .NET Version
-        run: .NET -version
+      # - name: Verify .NET Version
+      #   run: .NET -version
 
-      - name: Download the Code
-        uses: actions/checkout@v3
+      # - name: Download the Code
+      #   uses: actions/checkout@v3
 
-      - name: Fix the Permissions of mvnw command
-        run: chmod +x mvnw
+      # - name: Fix the Permissions of mvnw command
+      #   run: chmod +x mvnw
 
-      - name: replace the REPALCETHISVALUEINGITHUBACTIONS in pom.xml with Build Number
-        run: sed -i "s/REPALCETHISVALUEINGITHUBACTIONS/${{github.run_number}}/g" pom.xml
+      # - name: replace the REPALCETHISVALUEINGITHUBACTIONS in pom.xml with Build Number
+      #   run: sed -i "s/REPALCETHISVALUEINGITHUBACTIONS/${{github.run_number}}/g" pom.xml
 
-      - name: Build the Code
-        run: ./mvnw package
+      # - name: Build the Code
+      #   run: ./mvnw package
 
-      - name: Verify the Build is Created or Not
-        run: ls -l target/*.war
+      # - name: Verify the Build is Created or Not
+      #   run: ls -l target/*.war
 
-      - name: Upload Action Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: dotnetapp-devsecops-demo-${{github.run_number}}.war
-          path: target/dotnetapp-devsecops-demo-${{github.run_number}}.war
+      # - name: Upload Action Artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: dotnetapp-devsecops-demo-${{github.run_number}}.war
+      #     path: target/dotnetapp-devsecops-demo-${{github.run_number}}.war
