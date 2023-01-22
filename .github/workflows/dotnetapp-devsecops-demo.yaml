@@ -1,0 +1,42 @@
+name: Deploying .NET to IIS on Azure Windows Server
+
+on:
+  push:
+    branches:
+      -main
+  workflow_dispatch:
+
+jobs:
+  build-dotnet-application:
+    name: Build .NET Core
+    runs-on: ubuntu-latest
+    steps:
+      -name: Install dotnet
+        uses: actions/setup-dotnet@v3
+        with: 
+          dotnet-version: '6.0.405'
+          distribution: 'temurin'
+          
+      - name: Verify .NET Version
+        run: .NET -version
+
+      - name: Download the Code
+        uses: actions/checkout@v3
+
+      - name: Fix the Permissions of mvnw command
+        run: chmod +x mvnw
+
+      - name: replace the REPALCETHISVALUEINGITHUBACTIONS in pom.xml with Build Number
+        run: sed -i "s/REPALCETHISVALUEINGITHUBACTIONS/${{github.run_number}}/g" pom.xml
+
+      - name: Build the Code
+        run: ./mvnw package
+
+      - name: Verify the Build is Created or Not
+        run: ls -l target/*.war
+
+      - name: Upload Action Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dotnetapp-devsecops-demo-${{github.run_number}}.war
+          path: target/dotnetapp-devsecops-demo-${{github.run_number}}.war
