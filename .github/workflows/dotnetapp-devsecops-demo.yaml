@@ -1,66 +1,59 @@
-name: Deploying .NET to IIS on Azure Windows Server
+name: Copy Files via SSH to Windows Server
 
 on:
-  push:
-    branches:
-      -main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 jobs:
-  build-dotnet-application:
-    name: Build .NET Application
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v3
-        with: 
-          dotnet-version: '6.0.405'
-          
-
-needs: build
-steps:
-  - name: Upload a Build Artifact
-    uses: actions/upload-artifact@v3
-    with:
-      name: dotnetapp-devsecops-demo-${{github.run_number}}
-      path: dotnetapp
-      if-no-files-found: error
-
-
-      - name: Copy the Public Folder to Ubuntu
-          uses: /ssh-scp-deploy@v1.2.0
-          with:
-            local: 'dotnetapp/*'                                                 
-            remote: 'dotnetapp/'                                                
-            host: ${{secrets.HOST}}                                  
-            user: ${{secrets.USER}}
-            password: ${{secrets.PASSWORD}}
-            pre_upload: 
-            post_upload: 
-            ssh_options: 
-            scp_options: 
-
-      - name: Verify .NET Version
-        run: .NET -version
-
-      - name: Download the Code
+      - name: Checkout of the Code
         uses: actions/checkout@v3
 
-      - name: Fix the Permissions of mvnw command
-        run: chmod +x mvnw
+      - name: Install .NET Environment
+        uses: actions/setup-dotnet@v3.0.3
+        with:
+          dotnet-version: '6.0.405'
 
-      - name: replace the REPALCETHISVALUEINGITHUBACTIONS in pom.xml with Build Number
-        run: sed -i "s/REPALCETHISVALUEINGITHUBACTIONS/${{github.run_number}}/g" pom.xml
+      - name: Verify the .NET Installation
+        run: dotnet --version
 
-      - name: Build the Code
-        run: ./mvnw package
+      - name: Publish the Deployment Package in output folder
+        run: dotnet publish -o output
 
-      - name: Verify the Build is Created or Not
-        run: ls -l target/*.war
-
-      - name: Upload Action Artifacts
+      - name: Verfiy the output folder
+        run: ls -lrth output
+      
+      - name: Upload the Artifact
         uses: actions/upload-artifact@v3
         with:
-          name:.war
-          path: target/dotnetapp-devsecops-demo-${{github.run_number}}.war
+          name: output-${{github.run_number}}
+          path: output/*
+
+  deployment:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download the Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: output-${{github.run_number}}
+          path: output
+
+      - name: Check weather all the files are availble or not
+        run: ls -lrth output
+
+      - name: Copy the Public Folder to Ubuntu
+        uses: marcodallasanta/ssh-scp-deploy@v1.2.0
+        with:
+          local: 'output/*'
+          remote: 'output/'
+          host: ${{secrets.HOST}}
+          user: ${{secrets.USER}}
+          password: ${{secrets.PASSWORD}}
+          ssh_options: -o StrictHostKeyChecking=no
+          pre_upload: rmdir /s /q output
+          post_upload: iisreset /stop && xcopy /s /y output C:\inetpub\wwwroot\ && iisreset /start
